@@ -40,6 +40,8 @@ byte mrscGain = 20; // Gain in %
 // Configuration
 boolean mpuInversed = true;
 
+int servoPosition = SERVO_HOME;
+
 // Pin definition (don't change servo imputs, interrupt routine is hardcoded)
 #define INPUT_STEERING A0
 
@@ -47,6 +49,8 @@ boolean mpuInversed = true;
 
 #define GAIN_POT A2
 #define INVERSE_MPU_DIRECTION 9
+#define SERVO_STEP 5
+#define SERVO_HOME 127
 
 //
 // =======================================================================================================
@@ -68,7 +72,8 @@ void setup() {
   setPWMPrescaler(OUTPUT_STEERING, 1);
 
   // Center servo before MPU-6050 calibration, which takes time
-  analogWrite(OUTPUT_STEERING, 142); // 127 in theory. Adjust, until your servo does not move during MPU-6050 initialization!!
+  analogWrite(OUTPUT_STEERING, SERVO_HOME); // 127 in theory. Adjust, until your servo does not move during MPU-6050 initialization!!
+  servoPosition = SERVO_HOME;
 
   // MPU 6050 accelerometer / gyro setup
   setupMpu6050();
@@ -110,6 +115,11 @@ void mrsc() {
   analogWrite(OUTPUT_STEERING, steeringAngle);
 }
 
+void stepSteer(int output, int steeringAngle) {
+  while(abs(servo_position - steeringAngle) > SERVO_STEP)){
+  }
+}
+}
 //
 // =======================================================================================================
 // MAIN LOOP
@@ -120,4 +130,3 @@ void loop() {
   //readInputs(); // Read pots and switches
   mrsc(); // Do stability control calculations
 }
-
