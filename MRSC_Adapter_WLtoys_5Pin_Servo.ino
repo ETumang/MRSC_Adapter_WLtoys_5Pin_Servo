@@ -24,7 +24,7 @@ const float codeVersion = 0.2; // Software revision
 //
 
 #include <Wire.h> // I2C library (for the MPU-6050 gyro /accelerometer)
-#include <PWMFrequency.h> // https://github.com/TheDIYGuy999/PWMFrequency
+#include "PWMFrequency.h" // https://github.com/TheDIYGuy999/PWMFrequency
 
 #include "mpu.h" // MPU-6050 handling (.h file in sketch folder)
 
@@ -40,8 +40,6 @@ byte mrscGain = 20; // Gain in %
 // Configuration
 boolean mpuInversed = true;
 
-int servoPosition = SERVO_HOME;
-
 // Pin definition (don't change servo imputs, interrupt routine is hardcoded)
 #define INPUT_STEERING A0
 
@@ -51,6 +49,8 @@ int servoPosition = SERVO_HOME;
 #define INVERSE_MPU_DIRECTION 9
 #define SERVO_STEP 5
 #define SERVO_HOME 127
+
+int servoPosition = SERVO_HOME;
 
 //
 // =======================================================================================================
@@ -72,7 +72,7 @@ void setup() {
   setPWMPrescaler(OUTPUT_STEERING, 1);
 
   // Center servo before MPU-6050 calibration, which takes time
-  analogWrite(OUTPUT_STEERING, SERVO_HOME); // 127 in theory. Adjust, until your servo does not move during MPU-6050 initialization!!
+  stepSteer(OUTPUT_STEERING, SERVO_HOME); // 127 in theory. Adjust, until your servo does not move during MPU-6050 initialization!!
   servoPosition = SERVO_HOME;
 
   // MPU 6050 accelerometer / gyro setup
@@ -112,13 +112,24 @@ void mrsc() {
 
   // Control steering servo
   steeringAngle = map(steeringAngle, -255, 255, 0, 255);
-  analogWrite(OUTPUT_STEERING, steeringAngle);
+  stepSteer(OUTPUT_STEERING, steeringAngle);
 }
 
 void stepSteer(int output, int steeringAngle) {
-  while(abs(servo_position - steeringAngle) > SERVO_STEP)){
+  int newPosition = servoPosition;
+  while(abs(servoPosition - steeringAngle) > SERVO_STEP){
+    if(servoPosition < steeringAngle){
+      newPosition = newPosition + SERVO_STEP;
+    }
+    else{
+      newPosition = newPosition - SERVO_STEP;
+    }
+    analogWrite(output, newPosition);
+    delay(1);
+    servoPosition = newPosition;
   }
-}
+ analogWrite(output, steeringAngle);
+ servoPosition = steeringAngle;
 }
 //
 // =======================================================================================================
